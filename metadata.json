@@ -1,0 +1,8 @@
+{
+  "name": "EcoFlow Station Manager",
+  "description": "Sistema de gestión de turnos, cierres de caja y auditoría para estaciones de servicio.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": []
+}
