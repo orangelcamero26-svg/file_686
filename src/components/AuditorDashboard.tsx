@@ -375,9 +375,17 @@ export default function AuditorDashboard({ user }: Props) {
     <div className="max-w-7xl mx-auto pb-20 px-4">
       <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-slate-100 pb-8 relative group">
         <div className="absolute -left-4 top-0 bottom-0 w-2 bg-warning rounded-full" />
-        <div>
-          <h1 className="text-3xl font-black text-slate-800 uppercase tracking-tighter italic">Auditoría Shell Central</h1>
-          <div className="flex items-center gap-1 mt-3">
+        <div className="flex items-center gap-6">
+          <div className="hidden sm:flex w-20 h-20 bg-white rounded-3xl border border-slate-100 items-center justify-center shadow-xl shadow-brand-500/5 p-2 overflow-hidden">
+            <img 
+              src="/shell-logo.png" 
+              alt="Logo Shell" 
+              className="w-full h-full object-contain"
+            />
+          </div>
+          <div>
+            <h1 className="text-3xl font-black text-slate-800 uppercase tracking-tighter italic">Auditoría Shell Central</h1>
+            <div className="flex items-center gap-1 mt-3">
             {[
               { id: 'audit', label: 'Cierres de Caja', icon: <FileText className="w-3.5 h-3.5" /> },
               { id: 'users', label: 'Gestión Usuarios', icon: <UsersIcon className="w-3.5 h-3.5" /> }
@@ -397,6 +405,7 @@ export default function AuditorDashboard({ user }: Props) {
             ))}
           </div>
         </div>
+      </div>
 
         <div className="flex gap-2">
           <button onClick={loadData} className="bg-slate-50 border border-slate-200 text-slate-600 font-bold text-[10px] px-4 py-2 rounded-xl uppercase tracking-widest hover:bg-slate-100 transition-all flex items-center gap-2">
