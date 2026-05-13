@@ -14,7 +14,9 @@ import {
   MapPin,
   Camera,
   Image as ImageIcon,
-  Trash2
+  Trash2,
+  MessageCircle,
+  Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, CierreCaja, CierreStatus } from '../types.ts';
@@ -589,9 +591,27 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
           <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">Diseñado por</span>
           <div className="h-[1px] w-8 bg-slate-200" />
         </div>
-        <span className="text-xs font-black tracking-widest text-slate-800">
+        <span className="text-xs font-black tracking-widest text-slate-800 mb-4">
           ORANGEL CAMERO
         </span>
+        
+        {/* CONTACT LINKS */}
+        <div className="flex gap-4">
+          <a 
+            href="https://wa.me/56929393918?text=Hola%20Orangel,%20estoy%20usando%20tu%20aplicación%20de%20Shell%20y%20me%20gustaría%20contactarte." 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-[#25D366]/10 text-[#075e54] rounded-full text-[10px] font-black uppercase tracking-wider hover:bg-[#25D366]/20 transition-all border border-[#25D366]/20"
+          >
+            <MessageCircle className="w-4 h-4" /> WhatsApp
+          </a>
+          <a 
+            href="mailto:orangelcamero26@gmail.com" 
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-wider hover:bg-slate-200 transition-all border border-slate-200"
+          >
+            <Mail className="w-4 h-4" /> Correo
+          </a>
+        </div>
       </div>
     </div>
   );
