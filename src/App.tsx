@@ -62,8 +62,13 @@ export default function App() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full -mr-16 -mt-16" />
           
           <div className="flex flex-col items-center gap-4 mb-12 text-center relative z-10">
-            <div className="bg-brand-500 p-5 rounded-[2rem] shadow-xl shadow-brand-500/20 border-4 border-warning">
-              <Fuel className="text-warning w-10 h-10" />
+            <div className="bg-white p-2 rounded-[2rem] shadow-xl shadow-brand-500/20 border-4 border-warning w-24 h-24 flex items-center justify-center">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Shell_logo.svg/1200px-Shell_logo.svg.png" 
+                alt="Logo Shell" 
+                className="w-16 h-16 object-contain"
+                referrerPolicy="no-referrer"
+              />
             </div>
             <div>
               <h1 className="text-3xl font-black text-slate-800 tracking-tighter uppercase italic">Estación Digital</h1>
@@ -144,8 +149,13 @@ export default function App() {
       {/* HEADER */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-white/90 backdrop-blur-md border-b-2 border-brand-500 z-50 px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center text-warning shadow-lg shadow-brand-500/20 border border-brand-600">
-            <Fuel className="w-6 h-6" />
+          <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg shadow-brand-500/20 border border-slate-100 p-1">
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Shell_logo.svg/1200px-Shell_logo.svg.png" 
+              alt="Logo Shell" 
+              className="w-full h-full object-contain"
+              referrerPolicy="no-referrer"
+            />
           </div>
           <div className="flex flex-col">
             <h1 className="text-sm font-black text-slate-800 leading-tight uppercase tracking-tight italic">Estación Digital</h1>
