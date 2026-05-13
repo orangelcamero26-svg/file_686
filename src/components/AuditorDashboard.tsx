@@ -17,9 +17,11 @@ import {
   ArrowDownToLine,
   X,
   Trash2,
+  Edit,
   Users as UsersIcon,
   Plus,
   Mail,
+  MessageCircle,
   Shield,
   Key,
   Camera,
@@ -49,6 +51,7 @@ export default function AuditorDashboard({ user }: Props) {
   // Users State
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [newUser, setNewUser] = useState<Partial<User>>({
     role: UserRole.OPERATOR
   });
@@ -72,7 +75,7 @@ export default function AuditorDashboard({ user }: Props) {
     }
 
     const userToSave: User = {
-      id: crypto.randomUUID(),
+      id: editingUser ? editingUser.id : crypto.randomUUID(),
       name: newUser.name!,
       email: newUser.email!,
       password: newUser.password!,
@@ -81,9 +84,21 @@ export default function AuditorDashboard({ user }: Props) {
 
     await StorageService.saveUser(userToSave);
     setIsAddingUser(false);
+    setEditingUser(null);
     setNewUser({ role: UserRole.OPERATOR });
     await loadData();
-    alert('Usuario creado con éxito');
+    alert(editingUser ? 'Usuario actualizado con éxito' : 'Usuario creado con éxito');
+  };
+
+  const handleEditUser = (u: User) => {
+    setEditingUser(u);
+    setNewUser({
+      name: u.name,
+      email: u.email,
+      password: u.password,
+      role: u.role
+    });
+    setIsAddingUser(true);
   };
 
   const handleDeleteUser = (id: string) => {
@@ -570,7 +585,11 @@ export default function AuditorDashboard({ user }: Props) {
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Control de accesos y perfiles</p>
             </div>
             <button 
-              onClick={() => setIsAddingUser(true)}
+              onClick={() => {
+                setEditingUser(null);
+                setNewUser({ role: UserRole.OPERATOR });
+                setIsAddingUser(true);
+              }}
               className="bg-brand-600 text-white font-black text-[10px] px-6 py-3 rounded-2xl uppercase tracking-widest shadow-xl shadow-brand-600/20 active:scale-95 transition-all flex items-center gap-2"
             >
               <Plus className="w-4 h-4" /> Nuevo Usuario
@@ -580,7 +599,14 @@ export default function AuditorDashboard({ user }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {allUsers.map((u) => (
               <div key={u.id} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <button 
+                    onClick={() => handleEditUser(u)}
+                    className="p-3 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-2xl transition-all border border-transparent hover:border-brand-100"
+                    title="Editar Usuario"
+                  >
+                    <Edit className="w-5 h-5" />
+                  </button>
                   <button 
                     onClick={() => handleDeleteUser(u.id)}
                     className="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all border border-transparent hover:border-red-100"
@@ -625,10 +651,14 @@ export default function AuditorDashboard({ user }: Props) {
                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-white rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl relative z-10 border border-slate-200">
                   <div className="flex flex-col items-center gap-2 mb-8 text-center">
                     <div className="w-16 h-16 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-600 mb-2">
-                      <Plus className="w-8 h-8" />
+                      {editingUser ? <Edit className="w-8 h-8" /> : <Plus className="w-8 h-8" />}
                     </div>
-                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Crear Nuevo Perfil</h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ingrese los datos del colaborador</p>
+                    <h2 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">
+                      {editingUser ? 'Editar Usuario' : 'Crear Nuevo Perfil'}
+                    </h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                      {editingUser ? 'Modifique los datos del colaborador' : 'Ingrese los datos del colaborador'}
+                    </p>
                   </div>
 
                   <div className="space-y-5">
@@ -682,7 +712,11 @@ export default function AuditorDashboard({ user }: Props) {
 
                     <div className="pt-4 flex gap-3">
                       <button 
-                        onClick={() => setIsAddingUser(false)}
+                        onClick={() => {
+                          setIsAddingUser(false);
+                          setEditingUser(null);
+                          setNewUser({ role: UserRole.OPERATOR });
+                        }}
                         className="flex-1 py-4 border border-slate-200 text-slate-400 font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-slate-50 transition-all"
                       >
                         Cancelar
@@ -691,7 +725,7 @@ export default function AuditorDashboard({ user }: Props) {
                         onClick={handleCreateUser}
                         className="flex-[2] py-4 bg-brand-600 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl shadow-xl shadow-brand-600/20 active:scale-95 transition-all"
                       >
-                        Guardar Usuario
+                        {editingUser ? 'Actualizar' : 'Guardar Usuario'}
                       </button>
                     </div>
                   </div>
@@ -965,9 +999,27 @@ export default function AuditorDashboard({ user }: Props) {
           <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">Diseñado por</span>
           <div className="h-[1px] w-8 bg-slate-200" />
         </div>
-        <span className="text-xs font-black tracking-widest text-slate-800">
+        <span className="text-xs font-black tracking-widest text-slate-800 mb-4">
           ORANGEL CAMERO
         </span>
+        
+        {/* CONTACT LINKS */}
+        <div className="flex gap-4">
+          <a 
+            href="https://wa.me/56929393918?text=Hola%20Orangel,%20estoy%20usando%20tu%20aplicación%20de%20Shell%20y%20me%20gustaría%20contactarte." 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-[#25D366]/10 text-[#075e54] rounded-full text-[10px] font-black uppercase tracking-wider hover:bg-[#25D366]/20 transition-all border border-[#25D366]/20"
+          >
+            <MessageCircle className="w-4 h-4" /> WhatsApp
+          </a>
+          <a 
+            href="mailto:orangelcamero26@gmail.com" 
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 rounded-full text-[10px] font-black uppercase tracking-wider hover:bg-slate-200 transition-all border border-slate-200"
+          >
+            <Mail className="w-4 h-4" /> Correo
+          </a>
+        </div>
       </div>
     </div>
   );
