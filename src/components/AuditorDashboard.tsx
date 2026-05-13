@@ -94,6 +94,11 @@ export default function AuditorDashboard({ user }: Props) {
     if (!confirmDelete) return;
 
     if (confirmDelete.type === 'user') {
+      if (confirmDelete.id === user.id) {
+        alert("No puedes eliminar tu propio usuario por seguridad.");
+        setConfirmDelete(null);
+        return;
+      }
       await StorageService.deleteUser(confirmDelete.id);
     } else {
       await StorageService.deleteCierre(confirmDelete.id);
@@ -575,12 +580,13 @@ export default function AuditorDashboard({ user }: Props) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {allUsers.map((u) => (
               <div key={u.id} className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-xl transition-all group overflow-hidden relative">
-                <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-4 right-4">
                   <button 
                     onClick={() => handleDeleteUser(u.id)}
-                    className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl"
+                    className="p-3 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-2xl transition-all border border-transparent hover:border-red-100"
+                    title="Eliminar Usuario"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
                 
@@ -951,6 +957,18 @@ export default function AuditorDashboard({ user }: Props) {
           </div>
         )}
       </AnimatePresence>
+
+      {/* FOOTER DESARROLLADOR */}
+      <div className="mt-20 mb-8 flex flex-col items-center">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="h-[1px] w-8 bg-slate-200" />
+          <span className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">Diseñado por</span>
+          <div className="h-[1px] w-8 bg-slate-200" />
+        </div>
+        <span className="text-xs font-black tracking-widest text-slate-800">
+          ORANGEL CAMERO
+        </span>
+      </div>
     </div>
   );
 }
