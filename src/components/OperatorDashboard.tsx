@@ -158,6 +158,13 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} key="t-turno">
             <div className="card-clean">
               <div className="flex flex-col items-center gap-2 mb-8 pb-6 border-b border-slate-50 text-center">
+                <div className="mb-4 flex justify-center">
+                  <img 
+                    src="/shell-logo.png" 
+                    alt="Logo Shell" 
+                    className="w-14 h-14 object-contain"
+                  />
+                </div>
                 {workerPhoto ? (
                   <div className="relative group">
                     <img 
