@@ -45,10 +45,10 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
   });
 
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [workerPhoto, setWorkerPhoto] = useState<string | null>(null);
+  const [workerPhoto, setWorkerPhoto] = useState<string | null>(user.photo || null);
   const [soporteImagen, setSoporteImagen] = useState<string | null>(null);
   const [observaciones, setObservaciones] = useState('');
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   // Calculations
   const totalIslas = islas.reduce((acc, i) => acc + i.comb + i.noComb, 0);
@@ -61,7 +61,22 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
   const totalRecaudado = totalDepositos + totalCreditos + totalTarjetas + totalCopiloto + totalShellcard;
   const diferencia = totalRecaudado - totalIslas;
 
-  const formatCurrency = (val: number) => `$${Math.floor(val).toLocaleString('es-CL')}`;
+  const formatCurrency = (val: number) => {
+    const absVal = Math.abs(Math.floor(val));
+    const formatted = new Intl.NumberFormat('es-CL').format(absVal);
+    return `${val < 0 ? '-' : ''}$${formatted}`;
+  };
+
+  const formatForInput = (val: number | string) => {
+    if (val === 0 || val === '0') return '';
+    const num = typeof val === 'string' ? parseInt(val.replace(/\D/g, '')) : val;
+    if (isNaN(num)) return '';
+    return new Intl.NumberFormat('es-CL').format(num);
+  };
+
+  const parseFromInput = (val: string) => {
+    return parseInt(val.replace(/\D/g, '')) || 0;
+  };
 
   const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>, type: 'soporte' | 'worker') => {
     const file = e.target.files?.[0];
@@ -76,39 +91,51 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
   };
 
   const handleSave = async () => {
-    const newCierre: CierreCaja = {
-      id: crypto.randomUUID(),
-      fechaTurno: date,
-      turno: Number(shift),
-      startTime: new Date().toLocaleTimeString(),
-      userId: user.id,
-      userName: user.name,
-      islaId: 'custom',
-      islaName: `Islas (${islas.length})`,
-      lecturas: [],
-      ventaTeorica: totalIslas,
-      efectivoDeclarado: totalDepositos,
-      tarjetasDeclarado: totalTarjetas,
-      valesDeclarado: totalCreditos + totalCopiloto + totalShellcard,
-      totalDeclarado: totalRecaudado,
-      descuadre: diferencia,
-      status: CierreStatus.PENDIENTE,
-      attachments: soporteImagen ? [soporteImagen] : [],
-      workerPhoto: workerPhoto || undefined,
-      notes: observaciones
-    };
-    await StorageService.saveCierre(newCierre);
-    
-    // Show success message
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
-    
-    onTabChange('turno');
-    
-    // Reset image and notes for next session
-    setSoporteImagen(null);
-    setWorkerPhoto(null);
-    setObservaciones('');
+    try {
+      const newCierre: CierreCaja = {
+        id: crypto.randomUUID(),
+        fechaTurno: date,
+        turno: Number(shift),
+        startTime: new Date().toLocaleTimeString(),
+        userId: user.id,
+        userName: user.name,
+        islaId: 'custom',
+        islaName: `Islas (${islas.length})`,
+        lecturas: [],
+        ventaTeorica: totalIslas,
+        efectivoDeclarado: totalDepositos,
+        tarjetasDeclarado: totalTarjetas,
+        valesDeclarado: totalCreditos + totalCopiloto + totalShellcard,
+        totalDeclarado: totalRecaudado,
+        descuadre: diferencia,
+        status: CierreStatus.PENDIENTE,
+        attachments: soporteImagen ? [soporteImagen] : [],
+        workerPhoto: workerPhoto || undefined,
+        notes: observaciones
+      };
+      
+      await StorageService.saveCierre(newCierre);
+
+      // Persist worker photo to user profile if it changed
+      if (workerPhoto && workerPhoto !== user.photo) {
+        await StorageService.saveUser({ ...user, photo: workerPhoto });
+      }
+      
+      // Show success message
+      setSaveStatus('success');
+      setTimeout(() => {
+        setSaveStatus('idle');
+        onTabChange('turno');
+      }, 3000);
+      
+      // Reset images and notes for next session
+      setSoporteImagen(null);
+      setObservaciones('');
+    } catch (e) {
+      console.error('Error saving:', e);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
   };
 
   const steps = [
@@ -120,7 +147,7 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
   ];
 
   return (
-    <div className="">
+    <div className="max-w-md mx-auto w-full">
       {/* STEPPER PROGRESS */}
       <div className="mb-8 overflow-hidden">
         <div className="flex items-center justify-between relative px-2">
@@ -267,11 +294,12 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
                       <div>
                         <label className="label-micro opacity-40">Combustible</label>
                         <input 
-                          type="number" 
+                          type="text" 
+                          inputMode="numeric"
                           className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-right font-mono text-sm focus:border-brand-500 outline-none"
-                          value={isla.comb || ''}
+                          value={formatForInput(isla.comb)}
                           onChange={e => {
-                            const val = parseFloat(e.target.value) || 0;
+                            const val = parseFromInput(e.target.value);
                             setIslas(islas.map(i => i.id === isla.id ? { ...i, comb: val } : i));
                           }}
                         />
@@ -279,11 +307,12 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
                       <div>
                         <label className="label-micro opacity-40">No Combustibles</label>
                         <input 
-                          type="number" 
+                          type="text" 
+                          inputMode="numeric"
                           className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-right font-mono text-sm focus:border-brand-500 outline-none"
-                          value={isla.noComb || ''}
+                          value={formatForInput(isla.noComb)}
                           onChange={e => {
-                            const val = parseFloat(e.target.value) || 0;
+                            const val = parseFromInput(e.target.value);
                             setIslas(islas.map(i => i.id === isla.id ? { ...i, noComb: val } : i));
                           }}
                         />
@@ -338,11 +367,12 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
                       onChange={e => setDepositos(depositos.map(d => d.id === dep.id ? { ...d, num: e.target.value } : d))}
                     />
                     <input 
-                      type="number" 
+                      type="text" 
+                      inputMode="numeric"
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-3 text-xs text-right font-mono outline-none focus:border-emerald-300"
                       placeholder="0"
-                      value={dep.val || ''}
-                      onChange={e => setDepositos(depositos.map(d => d.id === dep.id ? { ...d, val: parseFloat(e.target.value) || 0 } : d))}
+                      value={formatForInput(dep.val)}
+                      onChange={e => setDepositos(depositos.map(d => d.id === dep.id ? { ...d, val: parseFromInput(e.target.value) } : d))}
                     />
                     <button 
                       onClick={() => setDepositos(depositos.filter(d => d.id !== dep.id))}
@@ -416,13 +446,14 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
                         }}
                       />
                       <input 
-                        type="number" 
+                        type="text" 
+                        inputMode="numeric"
                         className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-right font-mono"
                         placeholder="0"
-                        value={p.val || ''}
+                        value={formatForInput(p.val)}
                         onChange={e => {
                           const newPagos = { ...pagos };
-                          newPagos[section.key as keyof typeof pagos][idx].val = parseFloat(e.target.value) || 0;
+                          newPagos[section.key as keyof typeof pagos][idx].val = parseFromInput(e.target.value);
                           setPagos(newPagos);
                         }}
                       />
@@ -494,14 +525,14 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
                 </div>
                 
                 <div className={`flex justify-between p-6 items-center border-t-4 ${
-                  diferencia === 0 ? 'bg-emerald-50 border-emerald-500' : 
-                  diferencia < 0 ? 'bg-red-50 border-red-500' : 'bg-amber-50 border-amber-500'
+                  diferencia === 0 ? 'bg-slate-50 border-slate-900' : 
+                  diferencia < 0 ? 'bg-red-50 border-red-500' : 'bg-emerald-50 border-emerald-500'
                 }`}>
                   <span className="text-sm font-black uppercase tracking-widest">Diferencia</span>
                   <div className="text-right">
                     <span className={`text-3xl font-black font-mono tracking-tighter ${
-                      diferencia === 0 ? 'text-emerald-600' : 
-                      diferencia < 0 ? 'text-alert' : 'text-warning'
+                      diferencia === 0 ? 'text-slate-900' : 
+                      diferencia < 0 ? 'text-red-600' : 'text-emerald-600'
                     }`}>
                       {diferencia > 0 ? '+' : ''}{formatCurrency(diferencia)}
                     </span>
@@ -575,15 +606,26 @@ export default function OperatorDashboard({ user, activeTab, onTabChange }: Prop
             </button>
 
             <AnimatePresence>
-              {showSuccess && (
+              {saveStatus === 'success' && (
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="bg-emerald-500 text-white p-4 rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-emerald-500/20 mb-4"
+                  className="bg-emerald-500 text-white p-5 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-emerald-500/30 mb-4 border-b-4 border-emerald-700"
                 >
-                  <CheckCircle2 className="w-5 h-5" />
-                  <span className="text-xs font-black uppercase tracking-widest">Se guardó correctamente</span>
+                  <CheckCircle2 className="w-6 h-6" />
+                  <span className="text-sm font-black uppercase tracking-widest">¡Guardado con éxito!</span>
+                </motion.div>
+              )}
+              {saveStatus === 'error' && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-red-500 text-white p-5 rounded-2xl flex items-center justify-center gap-3 shadow-xl shadow-red-500/30 mb-4 border-b-4 border-red-700"
+                >
+                  <XCircle className="w-6 h-6" />
+                  <span className="text-sm font-black uppercase tracking-widest">Error al guardar</span>
                 </motion.div>
               )}
             </AnimatePresence>
