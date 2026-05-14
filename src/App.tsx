@@ -174,7 +174,7 @@ export default function App() {
       </header>
 
       {/* MAIN CONTENT */}
-      <main className="w-full max-w-md mx-auto px-4">
+      <main className={`w-full mx-auto px-4 ${isOperator ? 'max-w-md' : 'max-w-7xl'}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={currentUser.id}
