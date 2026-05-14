@@ -21,6 +21,7 @@ export interface User {
   role: UserRole;
   email: string;
   password?: string;
+  photo?: string;
 }
 
 export interface Isla {
